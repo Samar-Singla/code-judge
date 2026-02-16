@@ -22,14 +22,15 @@ app.use(express.urlencoded({ extended: true }));
 // Ensures we don't create thousands of connections in a Lambda environment
 let dbInitialized = false;
 const initializeDB = async () => {
-  if (!dbInitialized) {
-    try {
-      await DBConnection();
-      dbInitialized = true;
-      console.log("✅ Database connection established");
-    } catch (error) {
-      console.error("❌ Database connection failed:", error);
-    }
+  if (dbInitialized) return;
+
+  try {
+    await DBConnection();
+    dbInitialized = true;
+    console.log("Database connection established");
+  } catch (error) {
+    console.error("Database connection failed:", error);
+    throw error; // important: do not silently swallow
   }
 };
 
@@ -56,10 +57,18 @@ app.use('/api/submission', require('./routes/submissionRoutes'));
 module.exports = app;
 
 // Local Development Server
+// Start server only when this file is executed directly
 if (require.main === module) {
   (async () => {
-      await DBConnection();
-      const PORT = process.env.PORT || 5000;
-      app.listen(PORT, () => console.log(`🚀 Backend running locally on port ${PORT}`));
+      try {
+          await DBConnection();
+          const PORT = process.env.PORT || 5000;
+          app.listen(PORT, () => {
+              console.log(`Backend running locally on port ${PORT}`);
+          });
+      } catch (err) {
+          console.error("Failed to start server:", err);
+          process.exit(1);
+      }
   })();
 }
