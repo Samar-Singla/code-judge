@@ -6,13 +6,15 @@ const { v4: uuidv4 } = require('uuid');
 const dirCodes = path.join(process.env.AWS_LAMBDA_FUNCTION_NAME ? '/tmp' : process.cwd(), 'tmp', 'codes');
 
 const extensionForLanguage = (language) => {
-  if (language === 'c') return 'c';
-  if (language === 'cpp') return 'cpp';
-  if (language === 'py') return 'py';
-  if (language === 'java') return 'java';
-  return language;
-};
+  const map = {
+    c: "c",
+    cpp: "cpp",
+    py: "py",
+    java: "java",
+  };
 
+  return map[language] || language;
+};
 const detectJavaClassName = (code) => {
   const src = String(code || '');
   const publicClassMatch = src.match(/\bpublic\s+class\s+([A-Za-z_][A-Za-z0-9_]*)\b/);
